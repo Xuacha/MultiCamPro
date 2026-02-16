@@ -1,0 +1,59 @@
+{
+  "expo": {
+    "name": "MultiCamPro",
+    "slug": "multicampro",
+    "version": "1.0.0",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTabletMode": true,
+      "bundleIdentifier": "com.xuacha.multicampro",
+      "buildNumber": "1",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.xuacha.multicampro",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA",
+        "CAMERA_ROLL",
+        "RECORD_AUDIO",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "scheme": "multicampro",
+    "notification": {
+      "icon": "./assets/notification-icon.png",
+      "color": "#ffffff",
+      "sounds": []
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow MultiCamPro to access camera"
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow MultiCamPro to access photos",
+          "savePhotosPermission": "Allow MultiCamPro to save photos",
+          "isAccessMediaLocationEnabled": true
+        }
+      ]
+    ]
+  }
+}
