@@ -1,0 +1,92 @@
+name: Android Release CI - Build, Sign and Release APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      sign:
+        description: 'Sign release APK (requires secrets)'
+        required: true
+        default: 'true'
+
+jobs:
+  release-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install Android SDK tools
+        run: |
+          sudo mkdir -p /usr/local/lib/android/sdk
+          curl -sSfL "https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip" -o cmdline-tools.zip
+          sudo unzip -q cmdline-tools.zip -d /usr/local/lib/android/sdk
+          sudo mv /usr/local/lib/android/sdk/cmdline-tools /usr/local/lib/android/sdk/cmdline-tools-latest
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          export PATH=$PATH:$ANDROID_HOME/cmdline-tools-latest/bin:$ANDROID_HOME/platform-tools
+          yes | sudo /usr/local/lib/android/sdk/cmdline-tools-latest/bin/sdkmanager --sdk_root=${ANDROID_HOME} "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Build release APK (unsigned)
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Prepare keystore (if signing)
+        if: ${{ github.event.inputs.sign == 'true' }}
+        env:
+          ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_B64" ]; then echo "Missing ANDROID_KEYSTORE_B64 secret"; exit 1; fi
+          echo "$ANDROID_KEYSTORE_B64" | base64 -d > android/keystore.jks
+
+      - name: Sign APK (if signing)
+        if: ${{ github.event.inputs.sign == 'true' }}
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          ANDROID_HOME: /usr/local/lib/android/sdk
+        run: |
+          APK_UNSIGNED=android/app/build/outputs/apk/release/app-release-unsigned.apk
+          APK_ALIGNED=android/app/build/outputs/apk/release/app-release-unaligned.apk
+          APK_SIGNED=android/app/build/outputs/apk/release/app-release.apk
+          if [ ! -f "$APK_UNSIGNED" ]; then echo "Unsigned APK not found: $APK_UNSIGNED"; exit 1; fi
+          # Align (optional) and sign using apksigner
+          ${ANDROID_HOME}/build-tools/33.0.2/zipalign -v -p 4 "$APK_UNSIGNED" "$APK_ALIGNED" || cp "$APK_UNSIGNED" "$APK_ALIGNED"
+          echo "$KEYSTORE_PASSWORD" | ${ANDROID_HOME}/build-tools/33.0.2/apksigner sign --ks android/keystore.jks --ks-pass stdin --ks-key-alias "$KEY_ALIAS" --out "$APK_SIGNED" "$APK_ALIGNED"
+
+      - name: Upload Release APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+
+      - name: Create GitHub Release and attach APK
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: release-${{ github.run_id }}
+          name: Release ${{ github.run_number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload APK to Release
+        uses: softprops/action-upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: android/app/build/outputs/apk/release/app-release.apk
+          asset_name: app-release.apk
+          asset_content_type: application/vnd.android.package-archive
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
