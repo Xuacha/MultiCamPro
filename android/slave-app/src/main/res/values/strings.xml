@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MultiCamPro Slave</string>
+    <string name="app_version">1.0.0</string>
+    <string name="notification_channel_name">MultiCamPro Slave</string>
+    <string name="notification_text">Activo</string>
+    
+    <!-- MainActivity -->
+    <string name="status_title">Estado de Servicios</string>
+    <string name="enable_accessibility">Habilitar Accesibilidad</string>
+    <string name="show_status">Ver Estado</string>
+    <string name="accessibility_enabled">✓ Accesibilidad: Habilitada</string>
+    <string name="accessibility_disabled">✗ Accesibilidad: Deshabilitada</string>
+    <string name="foreground_service_running">✓ Servicio Primer Plano: Activo</string>
+    <string name="foreground_service_not_running">✗ Servicio Primer Plano: Inactivo</string>
+    <string name="enable_accessibility_prompt">Necesitas habilitar el servicio de Accesibilidad para que MultiCamPro funcione.</string>
+    
+    <!-- Mensajes de Log -->
+    <string name="service_started">Servicio iniciado</string>
+    <string name="service_stopped">Servicio detenido</string>
+    <string name="connection_established">Conexión establecida</string>
+    <string name="connection_lost">Conexión perdida</string>
+    <string name="battery_low">Batería baja</string>
+</resources>

@@ -1,0 +1,290 @@
+// MultiCamPro Firestore Security Rules
+// Production Version - Strict Authorization and Role-Based Access Control
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ==========================================
+    // Helper Functions
+    // ==========================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function hasRole(userId, collection, role) {
+      return exists(/databases/$(database)/documents/$(collection)/$(userId)) &&
+             get(/databases/$(database)/documents/$(collection)/$(userId)).data.role == role;
+    }
+    
+    function isAdmin(userId) {
+      return hasRole(userId, 'admins', 'admin');
+    }
+    
+    function canEditProject(projectId) {
+      return isAuthenticated() && 
+             (get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid ||
+              get(/databases/$(database)/documents/projects/$(projectId)).data.editors.hasAny([request.auth.uid]));
+    }
+    
+    function canViewProject(projectId) {
+      return isAuthenticated() &&
+             (get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid ||
+              get(/databases/$(database)/documents/projects/$(projectId)).data.editors.hasAny([request.auth.uid]) ||
+              get(/databases/$(database)/documents/projects/$(projectId)).data.viewers.hasAny([request.auth.uid]));
+    }
+    
+    function hasAccessToFile(fileId) {
+      let file = get(/databases/$(database)/documents/files/$(fileId)).data;
+      return file.ownerId == request.auth.uid ||
+             file.editors.hasAny([request.auth.uid]) ||
+             file.viewers.hasAny([request.auth.uid]);
+    }
+    
+    // ==========================================
+    // Users Collection
+    // ==========================================
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin(request.auth.uid));
+      allow write: if isAuthenticated() && isOwner(userId);
+      allow delete: if isAuthenticated() && (isOwner(userId) || isAdmin(request.auth.uid));
+      
+      match /settings/{settingId=**} {
+        allow read, write: if isAuthenticated() && isOwner(userId);
+      }
+      
+      match /preferences/{preferenceId=**} {
+        allow read, write: if isAuthenticated() && isOwner(userId);
+      }
+    }
+    
+    // ==========================================
+    // Projects Collection
+    // ==========================================
+    match /projects/{projectId} {
+      allow read: if isAuthenticated() && canViewProject(projectId);
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && canEditProject(projectId);
+      allow delete: if isAuthenticated() && 
+                       get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid;
+      
+      // Project members subcollection
+      match /members/{memberId} {
+        allow read: if isAuthenticated() && canViewProject(projectId);
+        allow write: if isAuthenticated() && 
+                       (get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid ||
+                        get(/databases/$(database)/documents/projects/$(projectId)).data.editors.hasAny([request.auth.uid]));
+      }
+      
+      // Project settings subcollection
+      match /settings/{settingId=**} {
+        allow read: if isAuthenticated() && canViewProject(projectId);
+        allow write: if isAuthenticated() && canEditProject(projectId);
+      }
+    }
+    
+    // ==========================================
+    // Files Collection
+    // ==========================================
+    match /files/{fileId} {
+      allow read: if isAuthenticated() && hasAccessToFile(fileId);
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.ownerId;
+      allow update: if isAuthenticated() && hasAccessToFile(fileId) &&
+                       (request.auth.uid == resource.data.ownerId ||
+                        resource.data.editors.hasAny([request.auth.uid]));
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.ownerId;
+      
+      // File comments subcollection
+      match /comments/{commentId} {
+        allow read: if isAuthenticated() && hasAccessToFile(fileId);
+        allow create: if isAuthenticated() && request.auth.uid == request.resource.data.authorId;
+        allow update: if isAuthenticated() && request.auth.uid == resource.data.authorId;
+        allow delete: if isAuthenticated() && 
+                        (request.auth.uid == resource.data.authorId || 
+                         request.auth.uid == get(/databases/$(database)/documents/files/$(fileId)).data.ownerId);
+      }
+      
+      // File versions subcollection
+      match /versions/{versionId} {
+        allow read: if isAuthenticated() && hasAccessToFile(fileId);
+        allow write: if isAuthenticated() && hasAccessToFile(fileId);
+      }
+      
+      // File metadata subcollection
+      match /metadata/{metadataId=**} {
+        allow read: if isAuthenticated() && hasAccessToFile(fileId);
+        allow write: if isAuthenticated() && hasAccessToFile(fileId);
+      }
+    }
+    
+    // ==========================================
+    // Albums Collection
+    // ==========================================
+    match /albums/{albumId} {
+      allow read: if isAuthenticated() && 
+                     (resource.data.ownerId == request.auth.uid ||
+                      resource.data.members.hasAny([request.auth.uid]));
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.ownerId;
+      allow update: if isAuthenticated() && 
+                       (resource.data.ownerId == request.auth.uid ||
+                        resource.data.editors.hasAny([request.auth.uid]));
+      allow delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+      
+      match /files/{fileId} {
+        allow read: if isAuthenticated() && 
+                       (get(/databases/$(database)/documents/albums/$(albumId)).data.ownerId == request.auth.uid ||
+                        get(/databases/$(database)/documents/albums/$(albumId)).data.members.hasAny([request.auth.uid]));
+        allow write: if isAuthenticated() && 
+                        (get(/databases/$(database)/documents/albums/$(albumId)).data.ownerId == request.auth.uid ||
+                         get(/databases/$(database)/documents/albums/$(albumId)).data.editors.hasAny([request.auth.uid]));
+      }
+    }
+    
+    // ==========================================
+    // Sharing Collection
+    // ==========================================
+    match /cloud_shares/{shareId} {
+      allow read: if isAuthenticated() && 
+                     (resource.data.ownerId == request.auth.uid ||
+                      resource.data.accessibleBy.hasAny([request.auth.uid]));
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.ownerId;
+      allow update: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+      
+      match /access_history/{historyId} {
+        allow read: if isAuthenticated() && 
+                       get(/databases/$(database)/documents/cloud_shares/$(shareId)).data.ownerId == request.auth.uid;
+        allow create: if isAuthenticated();
+      }
+    }
+    
+    // ==========================================
+    // File Sharing Collection
+    // ==========================================
+    match /file_sharing/{sharingId} {
+      allow read: if isAuthenticated() && 
+                     (resource.data.ownerId == request.auth.uid ||
+                      resource.data.sharedWith.hasAny([request.auth.uid]));
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.ownerId;
+      allow update: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+    }
+    
+    // ==========================================
+    // Album Sharing Collection
+    // ==========================================
+    match /album_sharing/{sharingId} {
+      allow read: if isAuthenticated() && 
+                     (resource.data.ownerId == request.auth.uid ||
+                      resource.data.sharedWith.hasAny([request.auth.uid]));
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.ownerId;
+      allow update: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+    }
+    
+    // ==========================================
+    // Sharing Invitations Collection
+    // ==========================================
+    match /sharing_invitations/{invitationId} {
+      allow read: if isAuthenticated() && 
+                     (resource.data.invitedEmail == request.auth.token.email ||
+                      resource.data.invitedUserId == request.auth.uid ||
+                      resource.data.ownerId == request.auth.uid);
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.ownerId;
+      allow update: if isAuthenticated() && 
+                       (resource.data.ownerId == request.auth.uid ||
+                        resource.data.invitedUserId == request.auth.uid);
+      allow delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+    }
+    
+    // ==========================================
+    // Sharing Activities Collection
+    // ==========================================
+    match /sharing_activities/{activityId} {
+      allow read: if isAuthenticated() && 
+                     (resource.data.ownerId == request.auth.uid ||
+                      resource.data.performedBy == request.auth.uid ||
+                      resource.data.affectedUsers.hasAny([request.auth.uid]));
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.performedBy;
+      allow delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+      
+      match /access_history/{historyId} {
+        allow read: if isAuthenticated() && 
+                       get(/databases/$(database)/documents/sharing_activities/$(activityId)).data.ownerId == request.auth.uid;
+        allow create: if isAuthenticated();
+      }
+    }
+    
+    // ==========================================
+    // Analytics Collections
+    // ==========================================
+    match /upload_metrics/{metricId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+    
+    match /download_metrics/{metricId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+    
+    match /storage_trends/{trendId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+    
+    match /quota_analytics/{analyticsId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+    
+    match /file_statistics/{statsId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+    
+    match /analytics_reports/{reportId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+    
+    // ==========================================
+    // Admin Collections
+    // ==========================================
+    match /admins/{adminId} {
+      allow read: if isAuthenticated() && isAdmin(request.auth.uid);
+      allow write: if isAuthenticated() && isAdmin(request.auth.uid);
+    }
+    
+    match /activity_log/{logId} {
+      allow read: if isAuthenticated() && isAdmin(request.auth.uid);
+      allow create: if isAuthenticated();
+      allow delete: if isAuthenticated() && isAdmin(request.auth.uid);
+    }
+    
+    match /audit_trails/{auditId} {
+      allow read: if isAuthenticated() && isAdmin(request.auth.uid);
+      allow create: if isAuthenticated();
+      allow delete: if isAuthenticated() && isAdmin(request.auth.uid);
+    }
+    
+    // ==========================================
+    // Default Deny
+    // ==========================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

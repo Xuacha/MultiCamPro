@@ -1,47 +1,31 @@
-import React, { useEffect, useState } from 'react';
-import { SafeAreaView, Text, ActivityIndicator, View, StyleSheet } from 'react-native';
-import { auth } from '@/config/firebase';
-import { authService } from '@/services/firebase';
-import { logger } from '@/utils/logger';
+import React from 'react';
+import { SafeAreaView, Text, View, StyleSheet, ScrollView } from 'react-native';
 
 export default function App() {
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        logger.log('User logged in:', currentUser.email);
-      } else {
-        setUser(null);
-        logger.log('User logged out');
-      }
-      setLoading(false);
-    });
-
-    return unsubscribe;
-  }, []);
-
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color="#0000ff" />
-          <Text style={styles.loadingText}>Inicializando...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.center}>
-        <Text style={styles.title}>MultiCamPro</Text>
-        <Text style={styles.subtitle}>
-          {user ? `Bienvenido ${user.email}` : 'Por favor inicia sesión'}
-        </Text>
-      </View>
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.header}>
+          <Text style={styles.title}>MultiCamPro</Text>
+          <Text style={styles.version}>v1.0.0</Text>
+        </View>
+        
+        <View style={styles.statusSection}>
+          <Text style={styles.statusTitle}>Status</Text>
+          <Text style={styles.statusText}>App running successfully</Text>
+          <Text style={styles.statusText}>Ready for testing</Text>
+        </View>
+
+        <View style={styles.infoSection}>
+          <Text style={styles.sectionTitle}>Device Info</Text>
+          <Text style={styles.infoText}>Platform: Android</Text>
+          <Text style={styles.infoText}>Build: Preview APK</Text>
+        </View>
+
+        <View style={styles.footerSection}>
+          <Text style={styles.footerText}>Step 2: Device Testing Ready</Text>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -49,27 +33,70 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
   },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
+  content: {
+    padding: 20,
+    paddingTop: 40,
+  },
+  header: {
+    marginBottom: 40,
     alignItems: 'center',
-    paddingHorizontal: 20,
   },
   title: {
-    fontSize: 28,
+    fontSize: 36,
     fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 5,
+  },
+  version: {
+    fontSize: 14,
+    color: '#666',
+  },
+  statusSection: {
+    backgroundColor: '#e8f5e9',
+    borderRadius: 8,
+    padding: 15,
+    marginBottom: 20,
+  },
+  statusTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#2e7d32',
     marginBottom: 10,
   },
-  subtitle: {
-    fontSize: 18,
+  statusText: {
+    fontSize: 14,
+    color: '#2e7d32',
+    marginBottom: 5,
+  },
+  infoSection: {
+    backgroundColor: '#e3f2fd',
+    borderRadius: 8,
+    padding: 15,
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1565c0',
+    marginBottom: 10,
+  },
+  infoText: {
+    fontSize: 14,
+    color: '#1565c0',
+    marginBottom: 5,
+  },
+  footerSection: {
+    marginTop: 30,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#ccc',
+  },
+  footerText: {
+    fontSize: 14,
     color: '#666',
     textAlign: 'center',
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#0000ff',
+    fontStyle: 'italic',
   },
 });

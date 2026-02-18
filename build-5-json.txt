@@ -1,0 +1,48 @@
+⠋ Fetching the build…⠙ Fetching the build…✔ Found a matching build for the project @rauledu7/multicampro
+{
+  "id": "e257bfd9-2f65-4dea-8aaf-a4fa4d62034e",
+  "status": "ERRORED",
+  "platform": "ANDROID",
+  "error": {
+    "errorCode": "UNKNOWN_ERROR",
+    "message": "Unknown error. See logs of the Install dependencies build phase for more information."
+  },
+  "artifacts": {},
+  "initiatingActor": {
+    "id": "8ee6c238-7845-4081-a67a-76034d80a5d5",
+    "displayName": "rauledu7"
+  },
+  "logFiles": [
+    "https://job-logs.eascdn.net/production/e257bfd9-2f65-4dea-8aaf-a4fa4d62034e/1771365819262-442ea72c-98f4-44b4-ac57-09a560633e46.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260217%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260217T222337Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=6f6e9bc5062d4c8a98c815bca86786bb938d0731b5229d838347849effe484c74e69f74db93bc4a70e50c2aa03eb6184ce791bce87b1764d47337e275ed44c4c159df03ebc8919ca04f2907feb4f1fe725d66e9a387ed8141481aa75144737a1f6eeb5a8f586c7d4d3bd62c6a574eaa37a7e41e82eab3a86ec0735cdea8a220efdd55ffbc9c21e6e20abe24f98f903d9c174f6baef14c3df8ba41179096b4ddce648f569f413ee03ac84bd0846758802946fa6899ff01659df4cada71deb08dc40a5cc0b5b6aa0abec471df4317106ce917575d1ab2d7590387243f9681741c4998dabc7c12712bf8ffb5fd873d700afd235544a8b9e537b843bb5f4a1ed3201",
+    "https://job-logs.eascdn.net/production/e257bfd9-2f65-4dea-8aaf-a4fa4d62034e/1771365828884-cb42e6d0-d743-4823-a40a-940babf50429.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260217%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260217T222337Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=559c0db2a2aad7d17ccd53bda41ddca8675784655d210516644fdec07bda803a1f1133826cf3b9c262f16d8bcab669b9ef8608b7cb05513b31ae4259f17bcb68ac755825e3209ba22e218790577cb2ea9d4df8f694b5e66404c9b093a6f41928fac102cd128c02442695759cc05c078e29da474ef700c5359dcc6ea6c936dfd08f70c086f8b823fcc9c4b02892852d15d302b3b9e8d744b5fc34a7501096ce1948c7ed3ac14ec416f773e726bec4dd01b9c69b36ef5939b783bd2fb7508f826e8889680eb133f49a6806a6b40bac0a311c38dc6ab5b7e6ba505258387fbc4bff626a1922c00b35a4cdf0dcbf883315bcf10988146ad6e9f1849a6fd259a17047",
+    "https://job-logs.eascdn.net/production/e257bfd9-2f65-4dea-8aaf-a4fa4d62034e/1771365829109-952fb2ad-7716-4014-943f-888f533d4bd1.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260217%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260217T222337Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=96ca2689d9aecd2dbfc4f116679a7d041db794e5c71dddc8a6046ba505b1a98fc51e3b8ae8e143204061a1b865840d27bb4d49f1ad1e745bf655f66ee0397f00ef4d73d797fca822b2283db6c317fa40395535745d43f275c6dedeb9fa26f3a9bdebb099196e0b8872929fc99bd180d2fd9054e30f84d212d75acfe94985796e9cefe8f9dc0fcb950dc1198643a835552af6a8d2006d5ee4d115b87358d3f68055b409af22b5856c0fd21bf7cea381f9756affe836904e727c6d428a81cf50d215fb9603bdf38b83ce32b90eb7c3fe16abdd0220a959815bad3fd5e3861aa004e04f1626450edde891625c58bad53f916f994283b55723da7982d814391817b6",
+    "https://job-logs.eascdn.net/production/e257bfd9-2f65-4dea-8aaf-a4fa4d62034e/1771365829291-10ce669f-a94e-4daf-b355-ca31dff76635.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260217%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260217T222337Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=0f89d570b0251ad396ec354603818734d661614ae85d3aed2e2605584f3439fe9e2a8bd241dd15871e40f035c50365088159058580f49e8ade1691d3f64c62fcb849ba96fc53e50d88d088b6ad669570ae75589bfe16938a371ead584882e1dd9a370d2c21ae8644b437fd8375a8182483e6616bb8181ad1961f5646ecc81402a73c37db2e8251e936e44a9d2cdbd939956a3efeb91172e26caa83e7fb135c87eb5a86313ce0eb8ff985c2caf601731da13c8e60e31c49920660ad1d2179c0c0efa6c9517d548ea0907d9ffb65f11ea3818f59dc2a0196f32532bb98eb8e69f2dc08dfe3075d06cb2d95d28a6440b5cf185fef8cd713eacf2e5deafbaa5fd1ae"
+  ],
+  "project": {
+    "id": "528be0cc-62d6-4fab-874b-e62031fdcbf9",
+    "name": "multicampro",
+    "slug": "multicampro",
+    "ownerAccount": {
+      "id": "ec3b2352-909a-48c2-8850-59a3f3ab2b33",
+      "name": "rauledu7"
+    }
+  },
+  "distribution": "STORE",
+  "buildProfile": "preview",
+  "sdkVersion": "51.0.0",
+  "appVersion": "1.0",
+  "appBuildVersion": "1",
+  "gitCommitHash": "455c8bb7867d59466d408c28c6f81b319a0e04ba",
+  "gitCommitMessage": "Agregar guía de configuración inicial (SETUP.md)",
+  "priority": "NORMAL",
+  "createdAt": "2026-02-17T22:03:39.061Z",
+  "updatedAt": "2026-02-17T22:06:25.713Z",
+  "completedAt": "2026-02-17T22:06:15.350Z",
+  "expirationDate": "2026-03-19T22:03:39.090Z",
+  "isForIosSimulator": false,
+  "metrics": {
+    "buildWaitTime": 101,
+    "buildQueueTime": 46523,
+    "buildDuration": 109081
+  }
+}

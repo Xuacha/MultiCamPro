@@ -1,0 +1,176 @@
+// Firebase Storage Security Rules
+// Production Version - Secure File Upload and Download
+
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isValidImage() {
+      return request.resource.contentType.matches('image/(jpeg|jpg|png|webp|gif)');
+    }
+    
+    function isValidVideo() {
+      return request.resource.contentType.matches('video/(mp4|webm|ogg|quicktime)');
+    }
+    
+    function isValidFile() {
+      return request.resource.contentType.matches('.*');
+    }
+    
+    function isUnderMaxSize(maxSize) {
+      return request.resource.size <= maxSize;
+    }
+    
+    function getMetadata(path) {
+      return firestore.get(path);
+    }
+    
+    // ==========================================
+    // User Profiles & Avatars
+    // ==========================================
+    match /users/{userId}/avatar/{filename} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isOwner(userId) && 
+                      isValidImage() && 
+                      isUnderMaxSize(10 * 1024 * 1024); // 10MB
+      allow delete: if isAuthenticated() && isOwner(userId);
+    }
+    
+    // ==========================================
+    // Project Files
+    // ==========================================
+    match /projects/{projectId}/files/{allPaths=**} {
+      // Check if user has access to the file
+      function canAccessProject() {
+        let project = firestore.get(/databases/(default)/documents/projects/$(projectId)).data;
+        return isAuthenticated() && (
+          project.ownerId == request.auth.uid ||
+          request.auth.uid in project.editors ||
+          request.auth.uid in project.viewers
+        );
+      }
+      
+      allow read: if canAccessProject();
+      allow write: if canAccessProject() && 
+                      (firestore.get(/databases/(default)/documents/projects/$(projectId)).data.ownerId == request.auth.uid ||
+                       request.auth.uid in firestore.get(/databases/(default)/documents/projects/$(projectId)).data.editors) &&
+                      isValidFile() &&
+                      isUnderMaxSize(5000 * 1024 * 1024); // 5GB max file
+      allow delete: if canAccessProject() && 
+                       (firestore.get(/databases/(default)/documents/projects/$(projectId)).data.ownerId == request.auth.uid ||
+                        request.auth.uid in firestore.get(/databases/(default)/documents/projects/$(projectId)).data.editors);
+    }
+    
+    // ==========================================
+    // Album Files
+    // ==========================================
+    match /albums/{albumId}/files/{filename} {
+      // Check if user has access to the album
+      function canAccessAlbum() {
+        let album = firestore.get(/databases/(default)/documents/albums/$(albumId)).data;
+        return isAuthenticated() && (
+          album.ownerId == request.auth.uid ||
+          request.auth.uid in album.members
+        );
+      }
+      
+      allow read: if canAccessAlbum();
+      allow write: if canAccessAlbum() && 
+                      (firestore.get(/databases/(default)/documents/albums/$(albumId)).data.ownerId == request.auth.uid ||
+                       request.auth.uid in firestore.get(/databases/(default)/documents/albums/$(albumId)).data.editors) &&
+                      isValidFile() &&
+                      isUnderMaxSize(5000 * 1024 * 1024);
+      allow delete: if canAccessAlbum() && 
+                       (firestore.get(/databases/(default)/documents/albums/$(albumId)).data.ownerId == request.auth.uid ||
+                        request.auth.uid in firestore.get(/databases/(default)/documents/albums/$(albumId)).data.editors);
+    }
+    
+    // ==========================================
+    // Media Files (Images, Videos)
+    // ==========================================
+    match /media/{userId}/images/{filename} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isOwner(userId) && 
+                      isValidImage() &&
+                      isUnderMaxSize(500 * 1024 * 1024); // 500MB for high-res images
+      allow delete: if isAuthenticated() && isOwner(userId);
+    }
+    
+    match /media/{userId}/videos/{filename} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isOwner(userId) && 
+                      isValidVideo() &&
+                      isUnderMaxSize(5000 * 1024 * 1024); // 5GB for videos
+      allow delete: if isAuthenticated() && isOwner(userId);
+    }
+    
+    // ==========================================
+    // Shared Files (Public/Private Shares)
+    // ==========================================
+    match /shares/{shareId}/{allPaths=**} {
+      // Public shares require share token in custom claims or public flag
+      function isPublicShare() {
+        return firestore.get(/databases/(default)/documents/cloud_shares/$(shareId)).data.isPublic == true;
+      }
+      
+      function hasShareAccess() {
+        let share = firestore.get(/databases/(default)/documents/cloud_shares/$(shareId)).data;
+        return isAuthenticated() && (
+          share.ownerId == request.auth.uid ||
+          request.auth.uid in share.accessibleBy
+        );
+      }
+      
+      // Read: Public shares or authenticated users with access
+      allow read: if isPublicShare() || hasShareAccess();
+      
+      // Write: Only owner can write
+      allow write: if isAuthenticated() && 
+                      firestore.get(/databases/(default)/documents/cloud_shares/$(shareId)).data.ownerId == request.auth.uid &&
+                      isValidFile() &&
+                      isUnderMaxSize(5000 * 1024 * 1024);
+      
+      // Delete: Only owner can delete
+      allow delete: if isAuthenticated() && 
+                       firestore.get(/databases/(default)/documents/cloud_shares/$(shareId)).data.ownerId == request.auth.uid;
+    }
+    
+    // ==========================================
+    // Temporary Upload Staging
+    // ==========================================
+    match /temp/{userId}/uploads/{filename} {
+      allow write: if isAuthenticated() && isOwner(userId) &&
+                      isValidFile() &&
+                      isUnderMaxSize(5000 * 1024 * 1024);
+      allow read: if isAuthenticated() && isOwner(userId);
+      allow delete: if isAuthenticated() && isOwner(userId);
+    }
+    
+    // ==========================================
+    // Backups (Admin Only)
+    // ==========================================
+    match /backups/{backupId}/{allPaths=**} {
+      allow read: if isAuthenticated() && (
+        request.auth.token.firebase.sign_in_provider == 'custom' &&
+        request.auth.token.claims.role == 'admin'
+      );
+      allow write, delete: if false; // Automated backups only
+    }
+    
+    // ==========================================
+    // Default Deny
+    // ==========================================
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

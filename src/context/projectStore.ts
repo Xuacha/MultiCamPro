@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { Project } from '@/types';
 import { logger } from '@/utils/logger';
 
-interface ProjectState {
+export interface ProjectState {
   projects: Project[];
   currentProject: Project | null;
   isLoading: boolean;
@@ -16,48 +16,50 @@ interface ProjectState {
   updateProject: (project: Project) => void;
 }
 
-export const useProjectStore = create<ProjectState>((set) => ({
+export const useProjectStore = create<ProjectState>(
+  (set: (updater: Partial<ProjectState> | ((state: ProjectState) => Partial<ProjectState>)) => void) => ({
   projects: [],
   currentProject: null,
   isLoading: false,
   error: null,
 
-  setProjects: (projects) => {
+  setProjects: (projects: Project[]) => {
     logger.log('Projects state updated', projects.length);
     set({ projects });
   },
 
-  setCurrentProject: (currentProject) => {
+  setCurrentProject: (currentProject: Project | null) => {
     logger.log('Current project updated', currentProject?.id);
     set({ currentProject });
   },
 
-  setLoading: (isLoading) => {
+  setLoading: (isLoading: boolean) => {
     set({ isLoading });
   },
 
-  setError: (error) => {
+  setError: (error: string | null) => {
     if (error) {
       logger.error('Project error', error);
     }
     set({ error });
   },
 
-  addProject: (project) => {
-    set((state) => ({
+  addProject: (project: Project) => {
+    set((state: ProjectState) => ({
       projects: [...state.projects, project],
     }));
   },
 
-  removeProject: (projectId) => {
-    set((state) => ({
-      projects: state.projects.filter((p) => p.id !== projectId),
+  removeProject: (projectId: string) => {
+    set((state: ProjectState) => ({
+      projects: state.projects.filter((p: Project) => p.id !== projectId),
     }));
   },
 
-  updateProject: (project) => {
-    set((state) => ({
-      projects: state.projects.map((p) => (p.id === project.id ? project : p)),
+  updateProject: (project: Project) => {
+    set((state: ProjectState) => ({
+      projects: state.projects.map((p: Project) => (p.id === project.id ? project : p)),
     }));
   },
-}));
+  }),
+);

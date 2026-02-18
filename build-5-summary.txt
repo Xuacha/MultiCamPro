@@ -1,0 +1,17 @@
+⠋ Fetching the build…⠙ Fetching the build…✔ Found a matching build for the project @rauledu7/multicampro
+
+ID                       e257bfd9-2f65-4dea-8aaf-a4fa4d62034e
+Platform                 Android
+Status                   errored
+Profile                  preview
+Distribution             store
+SDK Version              51.0.0
+Version                  1.0
+Version code             1
+Commit                   455c8bb7867d59466d408c28c6f81b319a0e04ba
+Logs                     https://expo.dev/accounts/rauledu7/projects/multicampro/builds/e257bfd9-2f65-4dea-8aaf-a4fa4d62034e
+Application Archive URL  null
+Build Artifacts URL      null
+Started at               2/17/2026, 10:03:39 PM
+Finished at              2/17/2026, 10:06:25 PM
+Started by               rauledu7

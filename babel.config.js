@@ -1,12 +1,6 @@
-{
-  "presets": ["babel-preset-expo"],
-  "plugins": [
-    "react-native-web",
-    "react-native-reanimated/plugin"
+module.exports = {
+  presets: ['babel-preset-expo'],
+  plugins: [
+    'react-native-web',
   ],
-  "env": {
-    "production": {
-      "plugins": ["react-native-paper/babel"]
-    }
-  }
-}
+};

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { User } from '@/types';
 import { logger } from '@/utils/logger';
 
-interface AuthState {
+export interface AuthState {
   user: User | null;
   isLoading: boolean;
   error: string | null;
@@ -11,24 +11,26 @@ interface AuthState {
   setError: (error: string | null) => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  isLoading: false,
-  error: null,
+export const useAuthStore = create<AuthState>(
+  (set: (updater: Partial<AuthState> | ((state: AuthState) => Partial<AuthState>)) => void) => ({
+    user: null,
+    isLoading: false,
+    error: null,
 
-  setUser: (user) => {
-    logger.log('User state updated', user?.id);
-    set({ user });
-  },
+    setUser: (user: User | null) => {
+      logger.log('User state updated', user?.id);
+      set({ user });
+    },
 
-  setLoading: (isLoading) => {
-    set({ isLoading });
-  },
+    setLoading: (isLoading: boolean) => {
+      set({ isLoading });
+    },
 
-  setError: (error) => {
-    if (error) {
-      logger.error('Auth error', error);
-    }
-    set({ error });
-  },
-}));
+    setError: (error: string | null) => {
+      if (error) {
+        logger.error('Auth error', error);
+      }
+      set({ error });
+    },
+  })
+);

@@ -2,14 +2,19 @@
   "expo": {
     "name": "MultiCamPro",
     "slug": "multicampro",
-    "version": "1.0.0",
-    "assetBundlePatterns": ["**/*"],
+    "version": "1.0.0",    "orientation": "portrait",    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTabletMode": true,
       "bundleIdentifier": "com.xuacha.multicampro",
       "buildNumber": "1",
       "config": {
         "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Allow MultiCamPro to access photos",
+        "NSPhotoLibraryAddUsageDescription": "Allow MultiCamPro to save photos"
       }
     },
     "android": {
@@ -26,7 +31,12 @@
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
+        "ACCESS_COARSE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_MEDIA_LOCATION"
       ]
     },
     "web": {
@@ -39,21 +49,10 @@
       "color": "#ffffff",
       "sounds": []
     },
-    "plugins": [
-      [
-        "expo-camera",
-        {
-          "cameraPermission": "Allow MultiCamPro to access camera"
-        }
-      ],
-      [
-        "expo-media-library",
-        {
-          "photosPermission": "Allow MultiCamPro to access photos",
-          "savePhotosPermission": "Allow MultiCamPro to save photos",
-          "isAccessMediaLocationEnabled": true
-        }
-      ]
-    ]
+    "extra": {
+      "eas": {
+        "projectId": "528be0cc-62d6-4fab-874b-e62031fdcbf9"
+      }
+    }
   }
 }
